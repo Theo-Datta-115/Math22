@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications.resnet50 import ResNet50
 from tensorflow.keras.preprocessing import image
 import keras
 
@@ -27,16 +28,30 @@ val = train_data.flow_from_directory(
     subset='validation') 
 
 
-model = keras.models.Sequential()
-model.add(keras.layers.Flatten())
-model.add(keras.layers.Dense(100, activation='relu', kernel_initializer='random_normal', input_dim = 2025))
-model.add(keras.layers.Dense(100, activation='relu', kernel_initializer='random_normal', input_dim=100))
-model.add(keras.layers.Dense(82, activation='softmax', kernel_initializer='random_normal', input_dim=100))
+# model = keras.models.Sequential()
+# model.add(keras.layers.Flatten())
+# model.add(keras.layers.Dense(100, activation='relu', kernel_initializer='random_normal', input_dim = 2025))
+# model.add(keras.layers.Dense(100, activation='relu', kernel_initializer='random_normal', input_dim=100))
+# model.add(keras.layers.Dense(82, activation='softmax', kernel_initializer='random_normal', input_dim=100))
 
-model.compile(optimizer=keras.optimizers.SGD(learning_rate=0.001),loss=keras.losses.MeanSquaredError(), metrics = ['accuracy'])
+model = tf.keras.models.Sequential()
+model.add(tf.keras.layers.Conv2D(filters=32, kernel_size=(5,5), padding='same', activation='relu', input_shape=(45, 45, 1)))
+model.add(tf.keras.layers.MaxPool2D(strides=2))
+model.add(tf.keras.layers.Conv2D(filters=48, kernel_size=(5,5), padding='valid', activation='relu'))
+model.add(tf.keras.layers.MaxPool2D(strides=2))
+model.add(tf.keras.layers.Flatten())
+model.add(tf.keras.layers.Dense(1000, activation='relu'))
+model.add(tf.keras.layers.Dense(200, activation='relu'))
+model.add(tf.keras.layers.Dense(82, activation='softmax'))
+
+model.compile(optimizer=keras.optimizers.SGD(learning_rate=0.01),loss=keras.losses.MeanSquaredError(), metrics = ['accuracy'])
 # Different params:
 # Optimizers: SGD, Adam, RMSProp
 # Losses: keras.losses.MeanSquaredError()
+
+#Interesting for future models:
+# model.lr_find()
+# model.recorder.plot(suggestion = True)
 
 model.fit(train, validation_data=val, epochs=25, verbose=1, batch_size=256,
         callbacks = keras.callbacks.EarlyStopping(monitor ="val_loss", mode ="min", patience = 5, restore_best_weights = True))
